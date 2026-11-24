@@ -1,5 +1,15 @@
+chromadb==1.5.9
 fastapi==0.165.0
 google-genai==3.6.1
+httpx==0.28.1
+pdfplumber==0.11.11
 pillow==13.0.0
+pydantic-settings==2.16.3
+pymupdf==2.1
+pytesseract==0.3.13
+pytest==9.2.0
 python-dotenv==1.2.4
+python-multipart==0.0.34
+rank-bm25==0.2.2
+sentence-transformers==6.3.0
 uvicorn==0.54.0

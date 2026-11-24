@@ -10,7 +10,8 @@ __pycache__/
 data/
 
 # Cached LLM answers from evaluation runs
-eval/cache/
+evaluation/cache/
+evaluation/runs/
 
 # Frontend build output
 node_modules/
