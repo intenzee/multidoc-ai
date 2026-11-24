@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { pageImageUrl, pdfUrl } from "../api.js";
+import { apiUrl, pageImageUrl, pdfUrl } from "../api.js";
 
 export default function SourceModal({ source, onClose }) {
   const [imageFailed, setImageFailed] = useState(false);
@@ -47,7 +47,7 @@ export default function SourceModal({ source, onClose }) {
             {source.kind === "image" ? (
               <>
                 <h3>Extracted image</h3>
-                <img className="figure" src={source.image_url} alt="Retrieved figure" />
+                <img className="figure" src={apiUrl(source.image_url)} alt="Retrieved figure" />
                 {source.text && (
                   <p>
                     <em>Index description:</em> {source.text}

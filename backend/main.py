@@ -77,8 +77,6 @@ class HealthResponse(BaseModel):
     app: str
     version: str
     server_time_utc: datetime
-    llm_provider: str
-    llm_model: str | None
     llm_configured: bool  # key + model present (never the key itself)
 
 
@@ -90,7 +88,5 @@ def health() -> HealthResponse:
         app=settings.app_name,
         version=settings.app_version,
         server_time_utc=datetime.now(timezone.utc),
-        llm_provider=settings.llm_provider,
-        llm_model=settings.gemini_model or None,
         llm_configured=settings.llm_configured,
     )

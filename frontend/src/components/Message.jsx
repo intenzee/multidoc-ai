@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { apiUrl } from "../api.js";
 
 const TYPE_LABEL = {
   text: "Text",
@@ -26,7 +27,7 @@ function SourceCard({ source, onOpen }) {
         <span className="tag">{TYPE_LABEL[source.content_type] || source.content_type}</span>
       </div>
       {source.kind === "image" ? (
-        <img src={source.image_url} alt={`Figure on page ${source.page_number}`} loading="lazy" />
+        <img src={apiUrl(source.image_url)} alt={`Figure on page ${source.page_number}`} loading="lazy" />
       ) : (
         <p className="excerpt">{source.text.slice(0, 220)}{source.text.length > 220 ? "…" : ""}</p>
       )}

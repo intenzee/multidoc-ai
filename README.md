@@ -179,6 +179,27 @@ The third also runs the answer experiments: about 22 free-tier Gemini calls, cac
 Results are written to `evaluation/results/results.md` and `results.json`.
 Report only numbers from these files.
 
+## Deployment
+
+- **Website** on **Vercel**: https://multidoc-ai.vercel.app (built from `frontend/`,
+  settings in `frontend/vercel.json`). `VITE_API_BASE` tells it where the backend is.
+- **Backend** stays on the Mac and is reached through a free **Cloudflare quick
+  tunnel**. Free hosts that can run it are hard to find: it needs about 2 GB of RAM
+  for the local models, plus LibreOffice, Tesseract, ffmpeg and a disk for the index.
+
+To go online (backend already running, `brew install cloudflared` done once, Vercel
+CLI logged in):
+
+```bash
+scripts/go_live.sh
+```
+
+The script starts the tunnel, waits until the backend answers through it, redeploys
+the website with the new tunnel address (a quick tunnel gets a new address on every
+start) and keeps running. The site answers questions only while the Mac is awake and
+the script runs; Ctrl-C takes it offline. Anyone who opens the site can see, upload
+and delete documents, and each question uses the Gemini quota of the configured key.
+
 ## Security
 
 - The Gemini key is read only by the backend from `.env`; it is never sent to the browser, logged or committed.

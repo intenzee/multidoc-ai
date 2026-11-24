@@ -39,8 +39,10 @@ class Settings(BaseSettings):
     # --- App -----------------------------------------------------------------
     app_name: str = "MultiDoc AI"
     app_version: str = "1.0.0"
-    # Comma-separated list of browser origins allowed to call the API (CORS).
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    # Comma-separated list of browser origins allowed to call the API (CORS):
+    # the Vite dev server and the website deployed on Vercel.
+    cors_origins: str = ("http://localhost:5173,http://127.0.0.1:5173,"
+                         "https://multidoc-ai.vercel.app")
     log_level: str = "INFO"
 
     # --- LLM (used only by generation; everything else works without it) -----
