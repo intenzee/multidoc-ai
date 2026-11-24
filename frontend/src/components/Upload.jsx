@@ -2,6 +2,12 @@ import { useRef, useState } from "react";
 import { uploadDocument } from "../api.js";
 
 const MAX_MB = 50; // the backend enforces the real limit (MAX_UPLOAD_MB)
+// The backend checks the real file type from its content; this only gives quick feedback.
+const ALLOWED = [
+  ".pdf", ".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".heic", ".heif",
+  ".docx", ".doc", ".pptx", ".ppt", ".txt", ".md", ".markdown",
+  ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".opus", ".flac", ".webm", ".mp4", ".mov", ".aiff", ".aif",
+];
 
 export default function Upload({ onUploaded }) {
   const inputRef = useRef(null);
@@ -14,8 +20,8 @@ export default function Upload({ onUploaded }) {
     if (!files.length) return;
     setMessage(null);
     for (const file of files) {
-      if (!file.name.toLowerCase().endsWith(".pdf")) {
-        setMessage({ type: "error", text: `${file.name}: only PDF files are supported.` });
+      if (!ALLOWED.some((ext) => file.name.toLowerCase().endsWith(ext))) {
+        setMessage({ type: "error", text: `${file.name}: this file type is not supported.` });
         continue;
       }
       if (file.size > MAX_MB * 1024 * 1024) {
@@ -25,7 +31,7 @@ export default function Upload({ onUploaded }) {
       try {
         setProgress({ name: file.name, value: 0 });
         await uploadDocument(file, (v) => setProgress({ name: file.name, value: v }));
-        setMessage({ type: "ok", text: `${file.name} uploaded. Processing…` });
+        setMessage({ type: "ok", text: `${file.name} uploaded. Processing… (audio and slides can take a minute)` });
       } catch (e) {
         setMessage({ type: "error", text: `${file.name}: ${e.message}` });
       } finally {
@@ -38,7 +44,7 @@ export default function Upload({ onUploaded }) {
 
   return (
     <div className="card">
-      <h2>Upload PDFs</h2>
+      <h2>Upload documents</h2>
       <div
         className={`dropzone ${dragging ? "dragging" : ""}`}
         onClick={() => inputRef.current?.click()}
@@ -56,13 +62,13 @@ export default function Upload({ onUploaded }) {
         tabIndex={0}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
       >
-        <strong>Drop PDF files here</strong> or click to choose
-        <small>Text, tables, charts and scanned pages · up to {MAX_MB} MB each</small>
+        <strong>Drop files here</strong> or click to choose
+        <small>PDF · Word · PowerPoint · pictures (PNG, JPG, HEIC, TIFF) · TXT/MD · audio (MP3, WAV, M4A…) · up to {MAX_MB} MB each</small>
       </div>
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf,.pdf"
+        accept={ALLOWED.join(",")}
         multiple
         hidden
         onChange={(e) => handleFiles(e.target.files)}

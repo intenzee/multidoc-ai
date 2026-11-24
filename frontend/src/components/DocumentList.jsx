@@ -43,8 +43,10 @@ function Details({ id }) {
         {s.timings && (
           <li>
             Processing time: {(
-              (s.timings.extract_s || 0) + (s.timings.caption_s || 0) + (s.timings.embed_s || 0)
+              (s.timings.convert_s || 0) + (s.timings.extract_s || 0) +
+              (s.timings.caption_s || 0) + (s.timings.embed_s || 0)
             ).toFixed(1)} s
+            {s.timings.convert_s ? ` (conversion ${s.timings.convert_s.toFixed(1)} s)` : ""}
           </li>
         )}
       </ul>
@@ -94,7 +96,7 @@ export default function DocumentList({ documents, selected, onSelect, onChanged 
   return (
     <div className="card">
       <h2>Documents</h2>
-      {documents.length === 0 && <p className="muted">No documents yet. Upload a PDF to start.</p>}
+      {documents.length === 0 && <p className="muted">No documents yet. Upload a file to start.</p>}
       {ready.length > 0 && (
         <p className="muted small">
           {selected.length === 0
@@ -130,7 +132,7 @@ export default function DocumentList({ documents, selected, onSelect, onChanged 
             </div>
             <div className="doc-meta">
               {formatSize(doc.size_bytes)}
-              {doc.page_count ? ` · ${doc.page_count} pages` : ""}
+              {doc.page_count ? ` · ${doc.page_count} page${doc.page_count === 1 ? "" : "s"}` : ""}
               <span className="doc-actions">
                 {doc.status === "failed" && (
                   <button className="link" onClick={() => reprocess(doc)}>

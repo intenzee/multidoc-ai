@@ -71,6 +71,16 @@ class Settings(BaseSettings):
     caption_images: bool = True  # ask the LLM to describe each image (uses quota)
     max_captions_per_document: int = Field(default=10, ge=0, le=200)
 
+    # --- Other file types (converted to PDF before processing) ----------------
+    # Word/PowerPoint files are converted with LibreOffice (headless, no macros).
+    office_timeout_s: int = Field(default=180, ge=10, le=1800)
+    # Audio is transcribed locally with Whisper on the Apple GPU (mlx). Free, offline,
+    # no LLM quota. A bigger model is more accurate but slower:
+    # mlx-community/whisper-large-v3-turbo (about 1.6 GB).
+    whisper_model: str = "mlx-community/whisper-small-mlx"
+    max_audio_minutes: int = Field(default=60, ge=1, le=600)
+    transcript_page_seconds: int = Field(default=120, ge=30, le=900)  # audio per "page"
+
     # --- Models (all run locally, free) ---------------------------------------
     text_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     image_embedding_model: str = "sentence-transformers/clip-ViT-B-32"
@@ -89,8 +99,9 @@ class Settings(BaseSettings):
     # Calibrated on evaluation/dataset.sample.json (see evaluation/results/results.md):
     # chart questions scored 0.34-0.40 with CLIP, non-visual questions at most 0.30.
     image_min_similarity: float = 0.30  # CLIP cosine similarity needed to keep an image
-    # Cross-encoder logits: > 0 means "relevant". Answerable questions scored >= 1.7;
-    # below this the question is answered "not in the documents" without an LLM call.
+    # Cross-encoder logits: > 0 means "relevant". Below this, retrieval is flagged as weak
+    # and figures are not attached via their captions. It does NOT block the answer:
+    # broad questions ("summarise this") score as low as off-topic ones.
     rerank_min_score: float = 0.0
     max_images_to_llm: int = Field(default=3, ge=0, le=10)
     max_context_chars: int = Field(default=12000, ge=1000, le=100000)

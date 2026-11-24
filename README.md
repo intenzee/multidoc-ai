@@ -2,7 +2,7 @@
 
 **A Multimodal Retrieval-Augmented Generation System for Intelligent Document Question Answering**
 
-Upload PDFs (text, tables, charts, scanned pages) and ask questions in plain language.
+Upload PDFs, Word and PowerPoint files, pictures (PNG, JPG, WEBP, TIFF, HEIC: charts, photos, scans), text files (.txt, .md) or audio recordings, and ask questions in plain language.
 MultiDoc AI finds the relevant passages *and images*, sends them to an LLM, and returns an
 answer that cites the exact document and page. If the documents don't contain the answer,
 it says so instead of guessing.
@@ -15,10 +15,10 @@ B.Tech AIML minor project.
 
 | Area | What it does |
 |---|---|
-| Ingestion | PDF text (PyMuPDF), tables to Markdown (pdfplumber), embedded images, OCR for scanned pages (Tesseract), page renders for vector charts, header/footer and duplicate-page removal |
+| Ingestion | Every file becomes a PDF first: pictures (one page each), Word/PowerPoint (LibreOffice, headless), text, and audio (transcribed locally with Whisper on the Apple GPU, one page per 2 minutes, with timestamps). Then: PDF text (PyMuPDF), tables to Markdown (pdfplumber), embedded images, OCR for scanned pages (Tesseract), page renders for vector charts, header/footer and duplicate-page removal |
 | Validation | PDF magic-byte check, size and page limits, corrupted/encrypted/empty PDFs rejected with clear messages, SHA-256 duplicate detection, safe file names (no path traversal) |
 | Indexing | MiniLM text embeddings (384-d) + CLIP image embeddings (512-d) in separate ChromaDB collections; facts in SQLite |
-| Retrieval | Dense search, BM25 keyword search, Reciprocal Rank Fusion, cross-encoder reranking, CLIP text-to-image search, weak-evidence detection |
+| Retrieval | Dense search, BM25 keyword search, Reciprocal Rank Fusion, cross-encoder reranking, CLIP text-to-image search, weak-evidence detection, page-spread evidence for broad questions (summaries, lists of topics) |
 | Generation | Gemini receives the evidence text **and the original images** (as PNG bytes), answers with `[S1]`-style citations; invalid citations are removed; refusal marker for unanswerable questions; prompt-injection defences |
 | Chat | Sessions with history; short follow-up questions reuse the previous question for retrieval |
 | Frontend | React + Vite: upload with progress, document status and statistics, document selection, chat, citation chips, source viewer with highlighted page render |
@@ -57,10 +57,11 @@ React (Vite, :5173) ──/api proxy──► FastAPI (:8000)
 
 ## Setup (macOS)
 
-Requirements: Python 3.12, Node.js 20+, Tesseract.
+Requirements: Python 3.12, Node.js 20+, Tesseract. Optional: LibreOffice (Word/PowerPoint) and ffmpeg (audio).
 
 ```bash
-brew install python@3.12 tesseract node
+brew install python@3.12 tesseract node ffmpeg
+brew install --cask libreoffice   # only needed for Word and PowerPoint files
 ```
 
 ```bash
@@ -133,18 +134,21 @@ All settings live in `backend/config.py` and can be overridden in `.env`, for ex
 | Setting | Default | Meaning |
 |---|---|---|
 | `MAX_UPLOAD_MB` / `MAX_PAGES` | 50 / 300 | upload limits |
+| `WHISPER_MODEL` | mlx-community/whisper-small-mlx | local speech-to-text model for audio |
+| `MAX_AUDIO_MINUTES` / `TRANSCRIPT_PAGE_SECONDS` | 60 / 120 | audio length limit / seconds of audio per "page" |
+| `OFFICE_TIMEOUT_S` | 180 | time limit for converting a Word/PowerPoint file |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` | 800 / 150 | characters per chunk |
 | `RETRIEVAL_MODE` | hybrid | `dense` or `hybrid` |
 | `USE_RERANKER` / `MULTIMODAL` | true / true | retrieval features |
 | `CAPTION_IMAGES` / `MAX_CAPTIONS_PER_DOCUMENT` | true / 10 | LLM figure descriptions at indexing time (uses quota) |
-| `RERANK_MIN_SCORE` | -6.0 | below this, evidence is treated as too weak to answer |
+| `RERANK_MIN_SCORE` | 0.0 | below this, retrieval is flagged as weak and figures are not attached via captions (the LLM still decides whether it can answer) |
 
 ## API
 
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/health` | status, LLM configured (never calls the LLM) |
-| POST | `/api/documents/upload` | upload a PDF (201, or 400/409/413/415/422) |
+| POST | `/api/documents/upload` | upload a PDF or a PNG/JPG/WEBP picture (201, or 400/409/413/415/422) |
 | GET | `/api/documents` | list with status |
 | GET / DELETE | `/api/documents/{id}` | details and statistics / delete everything |
 | POST | `/api/documents/{id}/reprocess` | process again |
@@ -182,9 +186,18 @@ Report only numbers from these files.
   instructions inside it, and documents cannot close their evidence block.
 - LLM output is rendered as Markdown without raw HTML.
 - Uploaded files are stored under random IDs; the original name is only displayed.
+- The file type is checked from the content, not the name. Pictures are decoded with a pixel limit (40 MP) to block decompression bombs.
 - Internal errors return a generic message; details stay in the server log.
 
 ## Limitations
+
+- **Audio:** transcription runs locally with `mlx-whisper` (Apple-silicon Macs only; the
+  first recording downloads the model, about 480 MB). Recordings are limited to
+  `MAX_AUDIO_MINUTES` (60) and to the 50 MB upload limit. Citations point to the
+  2-minute part of the recording; the transcript lines carry timestamps. For better
+  accuracy set `WHISPER_MODEL=mlx-community/whisper-large-v3-turbo` (slower, ~1.6 GB).
+- **Word/PowerPoint:** layout comes from LibreOffice, which can differ slightly from
+  Microsoft Office. Spreadsheets (.xlsx) are not supported.
 
 - OCR quality depends on scan quality; handwriting is not supported.
 - Complex tables with merged cells may lose structure.

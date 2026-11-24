@@ -77,7 +77,6 @@ select {
   padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
 }
 .brand { font-weight: 700; font-size: 18px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.logo { color: var(--accent); }
 .subtitle { font-weight: 400; font-size: 13px; color: var(--muted); }
 .pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); }
 .pill.ok { background: var(--ok-soft); color: var(--ok); }

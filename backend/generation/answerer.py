@@ -106,16 +106,17 @@ def answer_question(question: str, document_ids: list[str] | None = None,
         "llm_error": None, "timings": timings,
     }
 
-    # --- No usable evidence: answer honestly WITHOUT spending an LLM call -------------
-    if not sources or result.weak_evidence:
-        response.update(status="insufficient_evidence", answer=NO_EVIDENCE_TEXT,
-                        sources=sources if sources else [])
-        if sources:
-            response["warnings"].append("The closest passages scored too low to be trusted.")
+    # --- No evidence at all: answer honestly WITHOUT spending an LLM call ---------------
+    # Weak relevance scores do NOT stop the LLM: broad questions ("summarise", "list the
+    # subjects") score as low as off-topic ones, so the LLM decides from the evidence and
+    # refuses with INSUFFICIENT_EVIDENCE when it cannot answer.
+    if not sources:
+        response.update(status="insufficient_evidence", answer=NO_EVIDENCE_TEXT, sources=[])
         timings["total_ms"] = round((time.perf_counter() - started) * 1000, 1)
         return response
 
-    prompt = build_user_prompt(question, blocks, history[-2 * settings.history_turns:])
+    prompt = build_user_prompt(question, blocks, history[-2 * settings.history_turns:],
+                               overview=result.overview)
     try:
         llm = llm_service.get_llm()
         reply = llm.generate(prompt, system=SYSTEM_PROMPT, images=images)

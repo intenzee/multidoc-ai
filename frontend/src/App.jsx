@@ -45,15 +45,15 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand">
-          <span className="logo" aria-hidden>◆</span> MultiDoc AI
+          MultiDoc AI
           <span className="subtitle">Multimodal document question answering</span>
         </div>
         <div className="health">
           {health ? (
             <span className={health.llm_configured ? "pill ok" : "pill warn"}>
               {health.llm_configured
-                ? `LLM: ${health.llm_model}`
-                : "LLM not configured (retrieval only)"}
+                ? "AI ready"
+                : "AI not configured (search only)"}
             </span>
           ) : (
             !backendError && <span className="pill">Connecting…</span>

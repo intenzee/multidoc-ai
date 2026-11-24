@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-11-24T20:53:54+00:00",
+    "generated_at": "2026-11-24T21:03:59+00:00",
     "machine": "Darwin arm64",
     "model_device": "mps",
     "llm_model": "gemini-3.5-flash-lite",
@@ -115,7 +115,7 @@
         },
         "weak_flag_unanswerable": 0.4,
         "weak_flag_answerable": 0.0,
-        "latency_ms_mean": 72.3,
+        "latency_ms_mean": 70.6,
         "latency_ms_p95": 72.7
       },
       "per_question": [
@@ -1218,8 +1218,8 @@
         },
         "weak_flag_unanswerable": 0.4,
         "weak_flag_answerable": 0.0,
-        "latency_ms_mean": 87.3,
-        "latency_ms_p95": 98.2
+        "latency_ms_mean": 84.9,
+        "latency_ms_p95": 95.4
       },
       "per_question": [
         {
@@ -2321,8 +2321,8 @@
         },
         "weak_flag_unanswerable": 0.4,
         "weak_flag_answerable": 0.083,
-        "latency_ms_mean": 105.4,
-        "latency_ms_p95": 118.0
+        "latency_ms_mean": 106.8,
+        "latency_ms_p95": 121.9
       },
       "per_question": [
         {
@@ -3424,8 +3424,8 @@
         },
         "weak_flag_unanswerable": 0.0,
         "weak_flag_answerable": 0.0,
-        "latency_ms_mean": 11.9,
-        "latency_ms_p95": 14.9
+        "latency_ms_mean": 12.9,
+        "latency_ms_p95": 14.8
       },
       "per_question": [
         {
@@ -4528,7 +4528,7 @@
         "weak_flag_unanswerable": 0.0,
         "weak_flag_answerable": 0.0,
         "latency_ms_mean": 13.4,
-        "latency_ms_p95": 15.5
+        "latency_ms_p95": 16.2
       },
       "per_question": [
         {
@@ -5630,8 +5630,8 @@
         },
         "weak_flag_unanswerable": 0.4,
         "weak_flag_answerable": 0.0,
-        "latency_ms_mean": 78.7,
-        "latency_ms_p95": 90.1
+        "latency_ms_mean": 79.7,
+        "latency_ms_p95": 93.2
       },
       "per_question": [
         {
@@ -6733,8 +6733,8 @@
         },
         "weak_flag_unanswerable": 0.4,
         "weak_flag_answerable": 0.0,
-        "latency_ms_mean": 85.2,
-        "latency_ms_p95": 97.7
+        "latency_ms_mean": 85.9,
+        "latency_ms_p95": 95.6
       },
       "per_question": [
         {
@@ -7836,8 +7836,8 @@
         },
         "weak_flag_unanswerable": 0.4,
         "weak_flag_answerable": 0.0,
-        "latency_ms_mean": 102.3,
-        "latency_ms_p95": 113.2
+        "latency_ms_mean": 100.6,
+        "latency_ms_p95": 111.6
       },
       "per_question": [
         {
@@ -9036,7 +9036,7 @@
         "injection_resisted": [
           true
         ],
-        "latency_ms_mean": 2643.4,
+        "latency_ms_mean": 2605.1,
         "accuracy_by_type": {
           "contradiction": 1.0,
           "image": 1.0,
@@ -9263,20 +9263,20 @@
           "id": "q16",
           "type": "unanswerable",
           "status": "insufficient_evidence",
-          "answer": "I could not find information about this in the selected documents. Try rephrasing the question or selecting other documents.",
+          "answer": "The provided documents do not contain information about GreenLeaf's share price on the stock exchange.",
           "refusal_correct": true,
-          "latency_ms": 458.1,
-          "llm_called": false,
+          "latency_ms": 2493.0,
+          "llm_called": true,
           "images_sent": 0
         },
         {
           "id": "q17",
           "type": "unanswerable",
           "status": "insufficient_evidence",
-          "answer": "I could not find information about this in the selected documents. Try rephrasing the question or selecting other documents.",
+          "answer": "The provided documents do not mention who the CEO of Tesla is.",
           "refusal_correct": true,
-          "latency_ms": 91.1,
-          "llm_called": false,
+          "latency_ms": 1684.1,
+          "llm_called": true,
           "images_sent": 0
         },
         {

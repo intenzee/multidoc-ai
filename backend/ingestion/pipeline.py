@@ -26,6 +26,7 @@ from PIL import Image
 from backend.config import get_settings
 from backend.embeddings import models
 from backend.generation import llm_service
+from backend.ingestion import converters
 from backend.ingestion.chunking import chunk_text, split_table
 from backend.ingestion.pdf_extractor import PDFOpenError, extract_pdf
 from backend.retrieval.retriever import bm25_cache
@@ -93,7 +94,8 @@ def process_document(document_id: str) -> None:
             _process(document_id)
         except Exception as exc:  # last line of defence: record, don't crash the server
             logger.exception("Processing failed for %s", document_id)
-            message = str(exc) if isinstance(exc, (PDFOpenError, vector_store.IndexMismatchError)) \
+            safe = (PDFOpenError, vector_store.IndexMismatchError, converters.ConversionError)
+            message = str(exc) if isinstance(exc, safe) \
                 else "Processing failed unexpectedly. Check the server log for details."
             if db.get_document(document_id):
                 db.update_document_status(document_id, "failed", error=message)
@@ -108,9 +110,24 @@ def _process(document_id: str) -> None:
     bm25_cache.invalidate()  # its old chunks must not be searched while reprocessing
     timings: dict[str, float] = {}
 
+    # Word, PowerPoint, text and audio: convert to a PDF first (only once).
+    if not document_pdf_path(document_id).exists():
+        started = time.perf_counter()
+        page_count = converters.convert(document_id, document["filename"])
+        db.update_document_status(document_id, "processing", page_count=page_count)
+        timings["convert_s"] = round(time.perf_counter() - started, 2)
+
     started = time.perf_counter()
     extraction = extract_pdf(document_pdf_path(document_id))
     timings["extract_s"] = round(time.perf_counter() - started, 2)
+
+    # Text and audio: index the exact text, not the text read back from the PDF.
+    exact_texts = converters.load_page_texts(document_id)
+    if exact_texts and len(exact_texts) == len(extraction.pages):
+        for page, text in zip(extraction.pages, exact_texts):
+            page.text, page.ocr_used, page.tables = text, False, []
+            if page.kind == "duplicate":
+                page.kind = "text"
 
     chunks, chunk_counts = build_chunks(document_id, extraction.pages)
     title = document_title(document["filename"], extraction.title)

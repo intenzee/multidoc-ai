@@ -138,10 +138,10 @@ export default function Chat({ readyDocs, selected }) {
           <div className="empty">
             <h2>Ask questions about your documents</h2>
             <p className="muted">
-              Answers are generated only from the uploaded PDFs, with citations to the page.
+              Answers are generated only from your uploaded files, with citations to the page (for audio: the part of the recording).
             </p>
             {noDocs ? (
-              <p className="note">Upload a PDF and wait until it shows “Ready”.</p>
+              <p className="note">Upload a file and wait until it shows “Ready”.</p>
             ) : (
               <div className="examples">
                 {EXAMPLES.map((ex) => (

@@ -232,7 +232,7 @@ def evaluate_answers(questions, options: RetrievalOptions, tag: str, delay: floa
 
 
 def markdown_report(meta, retrieval, answers) -> str:
-    lines = [f"# MultiDoc AI: experiment results", "",
+    lines = ["# MultiDoc AI: experiment results", "",
              f"Generated {meta['generated_at']} on {meta['machine']} "
              f"(models on **{meta['model_device']}**).",
              f"Dataset: {meta['questions']} questions ({meta['answerable']} answerable, "

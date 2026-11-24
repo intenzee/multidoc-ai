@@ -89,6 +89,7 @@ class RetrievalResult:
     weak_evidence: bool  # True when even the best text match is poor
     options: RetrievalOptions
     timings_ms: dict
+    overview: bool = False  # broad question: evidence was spread across pages
 
     def to_dict(self) -> dict:
         return {
@@ -96,6 +97,7 @@ class RetrievalResult:
             "text_items": [i.to_dict() for i in self.text_items],
             "image_items": [i.to_dict() for i in self.image_items],
             "weak_evidence": self.weak_evidence,
+            "overview": self.overview,
             "options": self.options.__dict__,
             "timings_ms": self.timings_ms,
         }
@@ -169,6 +171,30 @@ def _normalise(text: str) -> str:
     return re.sub(r"\s+", " ", text.lower()).strip()
 
 
+# Broad questions ("summarise", "list the subjects", "what is this about") match no single
+# passage well, so they need evidence from many pages instead of the top few chunks.
+_OVERVIEW_RE = re.compile(
+    r"\b(summar\w*|overview|outline|main (points|ideas|topics)|key (points|ideas|topics)"
+    r"|what (is|are) (this|these|the|that) (document|pdf|file|report)s? about"
+    r"|(document|pdf|file)s? (is|are) about|list (all|every|the)\b|names? of (the |all )?\w+"
+    r"|subject names|course names|all (the )?(subjects|courses|topics|chapters|units|sections))",
+    re.IGNORECASE)
+
+
+def is_overview(query: str) -> bool:
+    return bool(_OVERVIEW_RE.search(query))
+
+
+def spread_over_pages(items: list[EvidenceItem]) -> list[EvidenceItem]:
+    """Best item of every page first (in ranked order), then the remaining items."""
+    first, rest, seen = [], [], set()
+    for item in items:
+        key = (item.document_id, item.page_number)
+        (rest if key in seen else first).append(item)
+        seen.add(key)
+    return first + rest
+
+
 # --- Main entry ------------------------------------------------------------------------------
 
 
@@ -178,7 +204,11 @@ def retrieve(query: str, document_ids: list[str] | None = None,
     options = options or RetrievalOptions.from_settings()
     timings: dict[str, float] = {}
     document_ids = document_ids or None
-    candidates_k = max(options.top_k_text * 2, options.final_top_k)
+    overview = is_overview(query)
+    final_k = max(options.final_top_k, 12) if overview else options.final_top_k
+    candidates_k = max(options.top_k_text * 2, final_k)
+    if overview:
+        candidates_k = max(candidates_k, 40)
 
     # 1. Dense search
     t0 = time.perf_counter()
@@ -235,7 +265,9 @@ def retrieve(query: str, document_ids: list[str] | None = None,
         weak = items[0].scores["rerank"] < settings.rerank_min_score
     elif items:
         weak = items[0].scores.get("dense", 0.0) < 0.2
-    text_items = items[:options.final_top_k]
+    if overview:
+        items = spread_over_pages(items)
+    text_items = items[:final_k]
 
     # 5. Images: CLIP search + figures whose caption was retrieved
     image_items: list[EvidenceItem] = []
@@ -269,4 +301,4 @@ def retrieve(query: str, document_ids: list[str] | None = None,
     timings = {k: round(v, 1) for k, v in timings.items()}
     timings["total"] = round(sum(timings.values()), 1)
     return RetrievalResult(query, text_items, image_items, weak and not image_items,
-                           options, timings)
+                           options, timings, overview)

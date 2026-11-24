@@ -2,7 +2,9 @@ chromadb==1.5.9
 fastapi==0.165.0
 google-genai==3.6.1
 httpx==0.28.1
+mlx-whisper==0.4.3; sys_platform == "darwin" and platform_machine == "arm64"
 pdfplumber==0.11.11
+pillow-heif==1.8.1
 pillow==13.0.0
 pydantic-settings==2.16.3
 pymupdf==2.1

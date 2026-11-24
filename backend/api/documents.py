@@ -2,7 +2,7 @@
 backend/api/documents.py
 
 Document endpoints:
-    POST   /api/documents/upload              upload a PDF (processing runs in background)
+    POST   /api/documents/upload              upload a PDF or a picture (processed in background)
     GET    /api/documents                     list documents with status
     GET    /api/documents/{id}                details, statistics, warnings
     DELETE /api/documents/{id}                delete file, vectors, rows and images
@@ -62,20 +62,23 @@ def _get_or_404(document_id: str) -> dict:
 
 @router.post("/upload", response_model=DocumentOut, status_code=status.HTTP_201_CREATED,
              responses={400: {"description": "Empty file"},
-                        409: {"description": "The same PDF was already uploaded"},
+                        409: {"description": "The same file was already uploaded"},
                         413: {"description": "File larger than MAX_UPLOAD_MB"},
-                        415: {"description": "File is not a PDF"},
-                        422: {"description": "Corrupted, encrypted, empty or too many pages"}})
+                        415: {"description": "Not a PDF or a PNG/JPG/WEBP picture"},
+                        422: {"description": "Corrupted, encrypted, empty, unreadable picture or too many pages"}})
 def upload_document(background: BackgroundTasks,
-                    file: Annotated[UploadFile, File(description="The PDF to upload")]):
-    """Validate and store a PDF, then process it in the background (poll its status)."""
+                    file: Annotated[UploadFile, File(description="A PDF, or a picture/chart (PNG, JPG, WEBP)")]):
+    """Validate and store a PDF or picture, then process it in the background (poll its status).
+
+    Pictures are stored as a one-page PDF, so everything downstream treats them alike.
+    """
     try:
         doc = service.accept_upload(file.file, file.filename)
     except UploadRejected as rejection:
         raise HTTPException(status_code=rejection.status_code, detail=rejection.message) from None
     except service.DuplicateDocument as dup:
         return JSONResponse(status_code=409, content={
-            "detail": f"This PDF was already uploaded as '{dup.existing['filename']}'.",
+            "detail": f"This file was already uploaded as '{dup.existing['filename']}'.",
             "existing_document_id": dup.existing["id"]})
     background.add_task(process_document, doc["id"])
     return _out(doc)
@@ -119,7 +122,10 @@ def get_document_file(document_id: str):
     path = document_pdf_path(document_id)
     if not path.exists():
         raise HTTPException(status_code=404, detail="The PDF file is missing on the server.")
-    return FileResponse(path, media_type="application/pdf", filename=doc["filename"],
+    name = doc["filename"]
+    if not name.lower().endswith(".pdf"):  # a picture: it is served as its one-page PDF
+        name = name.rsplit(".", 1)[0] + ".pdf"
+    return FileResponse(path, media_type="application/pdf", filename=name,
                         content_disposition_type="inline")
 
 

@@ -60,13 +60,22 @@ def format_image_note(label: str, item: dict) -> str:
             f'attached below.{caption}\n</evidence>')
 
 
+OVERVIEW_NOTE = (
+    "This is a broad question (summary, overview or list). Answer it from what the evidence "
+    "shows, even if no passage answers it word for word. If the evidence comes from several "
+    "documents, give a short overview of each document under its own name. Use the "
+    "INSUFFICIENT_EVIDENCE marker only if the evidence says nothing relevant at all.")
+
+
 def build_user_prompt(question: str, evidence_blocks: list[str],
-                      history: list[tuple[str, str]]) -> str:
+                      history: list[tuple[str, str]], overview: bool = False) -> str:
     parts = []
     if history:
         lines = [f"{role.capitalize()}: {text}" for role, text in history]
         parts.append("Earlier conversation (context only; it is not evidence):\n"
                      + "\n".join(lines))
     parts.append("Evidence from the selected documents:\n\n" + "\n\n".join(evidence_blocks))
+    if overview:
+        parts.append(OVERVIEW_NOTE)
     parts.append(f"Question: {question}")
     return "\n\n".join(parts)

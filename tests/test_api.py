@@ -96,3 +96,67 @@ def test_chat_without_documents_is_a_clear_error(client):
 
 def test_blank_question_rejected(client):
     assert client.post("/api/chat", json={"question": "   "}).status_code == 422
+
+
+def make_picture(fmt: str = "PNG", size=(400, 300), mode: str = "RGB") -> bytes:
+    from PIL import Image, ImageDraw
+
+    img = Image.new(mode, size, "white" if mode != "RGBA" else (255, 255, 255, 0))
+    if mode in ("RGB", "RGBA"):
+        draw = ImageDraw.Draw(img)
+        draw.rectangle((50, 100, 120, 280), fill=(70, 110, 180, 255))  # a tiny "bar chart"
+        draw.rectangle((180, 40, 250, 280), fill=(230, 140, 50, 255))
+    out = io.BytesIO()
+    img.save(out, format=fmt)
+    return out.getvalue()
+
+
+@pytest.mark.parametrize("fmt,name,mode", [("PNG", "chart.png", "RGBA"),
+                                           ("JPEG", "photo.jpg", "RGB"),
+                                           ("WEBP", "figure.webp", "RGB")])
+def test_picture_upload_becomes_one_page_document(client, fmt, name, mode):
+    data = make_picture(fmt, mode=mode)
+    r = upload(client, data, name)
+    assert r.status_code == 201, r.text
+    doc = r.json()
+    assert doc["filename"] == name and doc["page_count"] == 1
+
+    pdf = client.get(f"/api/documents/{doc['id']}/file")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF-")
+    with pymupdf.open(stream=pdf.content, filetype="pdf") as converted:
+        page = converted[0]
+        assert len(page.get_images()) == 1  # the picture itself, at full resolution
+        info = converted.extract_image(page.get_images()[0][0])
+        assert (info["width"], info["height"]) == (400, 300)
+    assert client.get(f"/api/documents/{doc['id']}/page/1").status_code == 200
+
+    assert upload(client, data, "again." + name.split(".")[-1]).status_code == 409
+    assert client.delete(f"/api/documents/{doc['id']}").status_code == 204
+
+
+def test_rejects_fake_picture(client):
+    r = upload(client, b"\x89PNG\r\n\x1a\n" + b"not really an image" * 10, "fake.png")
+    assert r.status_code == 422
+
+
+def test_rejects_image_bomb(client):
+    r = upload(client, make_picture("PNG", size=(7000, 7000), mode="1"), "huge.png")
+    assert r.status_code == 413
+
+
+def test_text_and_office_uploads_are_converted_in_the_background(client):
+    r = upload(client, "मशीन लर्निंग notes".encode(), "notes.txt")
+    assert r.status_code == 201, r.text
+    doc = r.json()
+    assert doc["filename"] == "notes.txt"
+    assert doc["page_count"] is None  # known after the background conversion
+    assert client.delete(f"/api/documents/{doc['id']}").status_code == 204
+
+
+def test_rejects_spreadsheets_and_unknown_zip_files(client):
+    import zipfile
+
+    data = io.BytesIO()
+    with zipfile.ZipFile(data, "w") as z:
+        z.writestr("xl/workbook.xml", "<workbook/>")
+    assert upload(client, data.getvalue(), "marks.xlsx").status_code == 415

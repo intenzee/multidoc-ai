@@ -1,6 +1,6 @@
 # MultiDoc AI: experiment results
 
-Generated 2026-11-24T20:53:54+00:00 on Darwin arm64 (models on **mps**).
+Generated 2026-11-24T21:03:59+00:00 on Darwin arm64 (models on **mps**).
 Dataset: 29 questions (24 answerable, 5 unanswerable) over the synthetic sample PDFs.
 All numbers below were measured by `evaluation/run_experiments.py`.
 
@@ -8,14 +8,14 @@ All numbers below were measured by `evaluation/run_experiments.py`.
 
 | Configuration | P@1 | P@3 | R@3 | Hit@1 | Hit@3 | MRR | latency_ms_mean |
 |---|---|---|---|---|---|---|---|
-| chunk 400 (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 72.3 |
-| chunk 800 (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 87.3 |
-| chunk 1200 (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 105.4 |
-| dense | 0.75 | 0.389 | 0.965 | 0.75 | 1.0 | 0.875 | 11.9 |
+| chunk 400 (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 70.6 |
+| chunk 800 (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 84.9 |
+| chunk 1200 (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 106.8 |
+| dense | 0.75 | 0.389 | 0.965 | 0.75 | 1.0 | 0.875 | 12.9 |
 | hybrid | 0.833 | 0.417 | 1.0 | 0.833 | 1.0 | 0.917 | 13.4 |
-| dense+rerank | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 78.7 |
-| hybrid+rerank | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 85.2 |
-| multimodal (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 102.3 |
+| dense+rerank | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 79.7 |
+| hybrid+rerank | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 85.9 |
+| multimodal (hybrid+rerank) | 0.792 | 0.417 | 1.0 | 0.792 | 1.0 | 0.896 | 100.6 |
 
 ### Hit@3 by question type
 
@@ -58,7 +58,7 @@ All numbers below were measured by `evaluation/run_experiments.py`.
 
 | Configuration | accuracy | keyword score | citation precision | citation coverage | refusal accuracy | false refusals | latency ms |
 |---|---|---|---|---|---|---|---|
-| full system (29 q) | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 0 | 2643.4 |
+| full system (29 q) | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 0 | 2605.1 |
 | text-only, image questions (3 q) | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 0 | 1650.4 |
 | multimodal, image questions (3 q) | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 | 0 | 1947.1 |
 
@@ -83,8 +83,8 @@ Prompt-injection question resisted: [True]
 | q13 | text | answered | True | Flights shorter than 6 hours must be booked in economy class [S1]. |
 | q14 | table | answered | True | The daily travel allowance for Europe is 60 EUR [S1][S2]. |
 | q15 | text | answered | True | Expense claims must be submitted within 30 days of returning [S1]. |
-| q16 | unanswerable | insufficient_evidence | True | I could not find information about this in the selected documents. Try rephrasing the question or selecting other docume |
-| q17 | unanswerable | insufficient_evidence | True | I could not find information about this in the selected documents. Try rephrasing the question or selecting other docume |
+| q16 | unanswerable | insufficient_evidence | True | The provided documents do not contain information about GreenLeaf's share price on the stock exchange. |
+| q17 | unanswerable | insufficient_evidence | True | The provided documents do not mention who the CEO of Tesla is. |
 | q18 | unanswerable | insufficient_evidence | True | The provided documents do not contain information about GreenLeaf's total revenue for the year 2022. |
 | q19 | ocr | answered | True | GreenLeaf received 151 warranty claims in 2024 [S2][S3][S8]. |
 | q20 | table | answered | True | The revenue from Europe in Q4 2024 was 3.3 crore rupees [S1][S3]. |
