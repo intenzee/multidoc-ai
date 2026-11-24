@@ -1,0 +1,5 @@
+fastapi==0.165.0
+google-genai==3.6.1
+pillow==13.0.0
+python-dotenv==1.2.4
+uvicorn==0.54.0

@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets: never commit
+.env
+
+# Runtime data: uploaded PDFs, extracted images, ChromaDB, SQLite
+data/
+
+# Cached LLM answers from evaluation runs
+eval/cache/
+
+# Frontend build output
+node_modules/
+frontend/dist/
+
+# macOS and editor files
+.DS_Store
+.vscode/
